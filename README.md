@@ -1,6 +1,6 @@
-# DocumentDB Agent Kit - Lean
+# DocumentDB Agent Kit
 
-A minimal, developer-first kit for building applications with **open-source
+A lean, developer-first kit for building applications with **open-source
 [DocumentDB](https://github.com/documentdb/documentdb)**: design the data,
 build the app, check its integrity, and verify real user flows with database-side
 metrics. This is a first version, not a production platform.
@@ -17,9 +17,9 @@ metrics. This is a first version, not a production platform.
 | End-to-end verification and database metrics | [Verify app](skills/verify-app/SKILL.md) | HTTP CRUD, invalid writes, persisted data, `explain`, and `collStats` |
 
 There is no MCP dependency, diagnostic toolbox, benchmark harness, test
-framework, cloud provisioning, or managed-Azure guidance. The starter uses
-Python's standard library plus **PyMongo**. The skills are stack-independent;
-the task API is a small example to adapt, not a required architecture.
+framework, or cloud provisioning. The starter uses Python's standard library
+plus **PyMongo**. The skills are stack-independent; the task API is a small
+example to adapt, not a required architecture.
 
 ## Build your own app without the starter
 

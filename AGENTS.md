@@ -1,7 +1,7 @@
 # DocumentDB Agent Kit - Lean
 
 Target **open-source DocumentDB**, the PostgreSQL-backed document database with
-a MongoDB-compatible gateway. Not Amazon DocumentDB or the managed Azure service.
+a MongoDB-compatible gateway.
 
 Read only the skill relevant to the task:
 
