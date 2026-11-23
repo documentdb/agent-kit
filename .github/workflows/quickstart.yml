@@ -1,0 +1,83 @@
+name: Lean kit cold-start journey
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Start only the database without starter dependencies
+        run: |
+          python3 quickstart.py database
+          python3 - <<'PY'
+          import subprocess
+          from pathlib import Path
+          assert not Path("starter/.wheels").exists()
+          services = subprocess.check_output([
+              "docker", "compose", "--env-file", ".env", "-f", "starter/compose.yaml",
+              "ps", "--services", "--status", "running",
+          ], text=True).splitlines()
+          assert services == ["documentdb"], services
+          PY
+      - name: Probe only selected primitive requirements
+        run: |
+          python3 quickstart.py compatibility \
+            --features crud,unique-index,compound-index,ttl-index-definition \
+            > /tmp/lean-capabilities.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path("/tmp/lean-capabilities.json").read_text())
+          assert result["probeDatabaseRemoved"]
+          assert result["configuredImage"] and result["resolvedImageId"]
+          assert all(feature["status"] == "supported" for feature in result["features"])
+          PY
+      - name: Unknown requirements stay unverified
+        run: |
+          if python3 quickstart.py compatibility --features unlisted-app-requirement > /tmp/lean-unknown.json; then
+            exit 1
+          else
+            test "$?" -eq 2
+          fi
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          result = json.loads(Path("/tmp/lean-unknown.json").read_text())
+          assert result["features"][0]["status"] == "unverified"
+          assert result["probeDatabase"] is None
+          PY
+      - name: Run the documented first-user command
+        run: python3 quickstart.py
+      - name: Verify a repeat start preserves configuration and data
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, subprocess, urllib.request
+          from pathlib import Path
+          before = hashlib.sha256(Path(".env").read_bytes()).digest()
+          req = urllib.request.Request(
+              "http://127.0.0.1:8000/tasks",
+              data=json.dumps({"title": "CI persistence check"}).encode(),
+              headers={"Content-Type": "application/json"},
+          )
+          with urllib.request.urlopen(req, timeout=10) as response:
+              task = json.load(response)
+          subprocess.run(["python3", "quickstart.py", "stop"], check=True)
+          subprocess.run(["python3", "quickstart.py"], check=True)
+          assert hashlib.sha256(Path(".env").read_bytes()).digest() == before
+          with urllib.request.urlopen("http://127.0.0.1:8000/tasks/" + task["_id"], timeout=10) as response:
+              assert json.load(response)["title"] == task["title"]
+          PY
+      - name: Stop the owned development stack
+        if: always()
+        run: python3 quickstart.py stop

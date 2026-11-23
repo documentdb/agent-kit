@@ -1,0 +1,7 @@
+*
+!requirements.txt
+!*.py
+!Dockerfile
+!LICENSE
+!.wheels/
+!.wheels/*.whl

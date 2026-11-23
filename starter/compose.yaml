@@ -1,0 +1,33 @@
+services:
+  documentdb:
+    image: ${DOCUMENTDB_IMAGE:-ghcr.io/documentdb/documentdb/documentdb-local@sha256:1d40546ccf53a0229f98a0848b7c3d6d74dc35a9fa535a1d1c8f70e3bed10d23}
+    environment:
+      USERNAME: ${DOCUMENTDB_USERNAME:?Set DOCUMENTDB_USERNAME}
+      PASSWORD: ${DOCUMENTDB_PASSWORD:?Generate DOCUMENTDB_PASSWORD first}
+      DOCUMENTDB_USAGE_TELEMETRY: "false"
+      DO_NOT_TRACK: "1"
+    ports:
+      - "127.0.0.1:${DOCUMENTDB_PORT:-10260}:10260"
+    volumes:
+      - documentdb-data:/data
+    stop_grace_period: 30s
+  app:
+    build: .
+    environment:
+      DOCUMENTDB_HOST: documentdb
+      DOCUMENTDB_USERNAME: ${DOCUMENTDB_USERNAME:?Set DOCUMENTDB_USERNAME}
+      DOCUMENTDB_PASSWORD: ${DOCUMENTDB_PASSWORD:?Generate DOCUMENTDB_PASSWORD first}
+      DOCUMENTDB_TLS_ALLOW_INVALID: "true"
+      APP_HOST: 0.0.0.0
+    ports:
+      - "127.0.0.1:${APP_PORT:-8000}:8000"
+    depends_on:
+      documentdb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 5s
+      timeout: 6s
+      retries: 12
+volumes:
+  documentdb-data:

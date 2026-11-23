@@ -1,0 +1,14 @@
+{
+  "name": "lean-documentdb-connection-example",
+  "private": true,
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "start": "node connect.cjs"
+  },
+  "dependencies": {
+    "mongodb": "7.6.0"
+  }
+}

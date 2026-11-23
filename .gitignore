@@ -1,0 +1,9 @@
+.env
+.env.*.tmp
+.runtime/
+.wheels/
+.venv/
+__pycache__/
+node_modules/
+*.pyc
+starter/*-report.json
